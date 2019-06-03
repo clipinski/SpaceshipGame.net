@@ -7,22 +7,32 @@ using SFML.Window;
 
 namespace SpaceshipGame.net
 {
-    class Program
+    class Game
     {
-        /// <summary>
-        /// Loads the game config from the json file
-        /// </summary>
-        /// <returns>IConfiguration interface to retrieve configuration settings</returns>
-        static IConfiguration GetConfig()
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(System.AppContext.BaseDirectory)
-                .AddJsonFile("gameconfig.json",
-                optional: false,
-                reloadOnChange: true);
+        #region Properties
 
-            return builder.Build();
+        // Backing Stores
+        static private IConfiguration _settings;
+        
+        /// <summary>
+        /// Returns the game settings, read from the game config file
+        /// </summary>
+        static public IConfiguration Settings
+        {
+            get
+            {
+                return _settings ??
+                      (_settings = new ConfigurationBuilder()
+                                    .SetBasePath(System.AppContext.BaseDirectory)
+                                    .AddJsonFile("gameconfig.json",
+                                        optional: false,
+                                        reloadOnChange: true).Build());
+            }
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Main entry point for the game program
@@ -30,10 +40,9 @@ namespace SpaceshipGame.net
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            var settings = GetConfig();
-
             // Create new render window
-            var window = new RenderWindow(new VideoMode(uint.Parse(settings["WindowWidth"]), uint.Parse(settings["WindowHeight"])), "SpaceshipGame.net");
+            var window = new RenderWindow(new VideoMode(uint.Parse(Settings["WindowWidth"]), uint.Parse(Settings["WindowHeight"])), "SpaceshipGame.net");
+            // Add an event handler to handle when the user presses the "X" (close) button
             window.Closed += (sender, eventArgs) =>
             {
                 window.Close();
@@ -43,15 +52,16 @@ namespace SpaceshipGame.net
             window.SetFramerateLimit(60);
 
             // Allow vsync to be optional, based on settings
-            window.SetVerticalSyncEnabled(bool.Parse(settings["EnableVSync"]));
+            window.SetVerticalSyncEnabled(bool.Parse(Settings["EnableVSync"]));
 
+
+            Image img = new Image(String.Format("gfx/ShipFrames1.bmp"));
+            img.CreateMaskFromColor(Color.Black);
 
             Sprite[] shipSprites = new Sprite[4];
             for(int i = 0; i < 4; i++)
             {
-                Image img = new Image(String.Format("gfx/00ShipFrames{0}.bmp", i+1));
-                img.CreateMaskFromColor(Color.Black);
-                shipSprites[i] = new Sprite(new Texture(img), new IntRect(0, 0, 63, 63));
+                shipSprites[i] = new Sprite(new Texture(img), new IntRect(0+(64*i), 0, 63, 63));
                 shipSprites[i].Scale = new Vector2f(2.0f, 2.0f);
                 shipSprites[i].Origin = new Vector2f(31.5f, 31.5f);
             }
@@ -88,4 +98,6 @@ namespace SpaceshipGame.net
             }
         }
     }
+
+    #endregion
 }
