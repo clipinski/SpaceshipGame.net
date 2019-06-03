@@ -13,6 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="fonts\Xcelsion.ttf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="gameconfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

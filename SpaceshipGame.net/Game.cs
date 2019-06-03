@@ -1,4 +1,28 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright (c) 2019 Craig J. Lipinski
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using Microsoft.Extensions.Configuration;
 using SFML.Audio;
 using SFML.Graphics;
@@ -27,6 +51,18 @@ namespace SpaceshipGame.net
                                     .AddJsonFile("gameconfig.json",
                                         optional: false,
                                         reloadOnChange: true).Build());
+            }
+        }
+
+        /// <summary>
+        /// Return the desired frame time in milliseconds.  For our game, our target framerate
+        ///   is 60fps
+        /// </summary>
+        static public Int32 DesiredFrameTime
+        {
+            get
+            {
+                return ( (Int32) (1000f / 60f) );
             }
         }
 
@@ -66,9 +102,15 @@ namespace SpaceshipGame.net
                 shipSprites[i].Origin = new Vector2f(31.5f, 31.5f);
             }
 
-         
+
+            // Load a font to display some text
+            Font font = new Font("fonts/Xcelsion.ttf");
+
             // Create a vector to move the shape
             Vector2f speed = new Vector2f(1f, 1f);
+
+            // delta time position
+            Vector2f fpsPos = new Vector2f(uint.Parse(Settings["WindowWidth"]) - 400, 10f);
 
             Clock gameClock = new Clock();
             float frameCounter = 0f;
@@ -87,6 +129,14 @@ namespace SpaceshipGame.net
                 window.Clear(Color.Black);
 
                 window.Draw(shipSprites[(int)frameCounter]);
+
+                Text t = new Text(String.Format("Frametime={0}", delta), font, 20)
+                {
+                    FillColor = Color.White,
+                    Position = fpsPos
+                };
+               
+                window.Draw(t);
 
                 window.Display();
 
