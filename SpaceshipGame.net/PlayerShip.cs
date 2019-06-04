@@ -6,7 +6,7 @@ using SFML.Graphics;
 
 namespace SpaceshipGame.net
 {
-    public class PlayerShip : GameEntity, Drawable
+    public class PlayerShip : GameEntity
     {
         // Internals
         private Sprite[] _shipSprites;              // List of sprites we use when drawing this ship
