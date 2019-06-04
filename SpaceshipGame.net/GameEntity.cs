@@ -32,16 +32,59 @@ namespace SpaceshipGame.net
 {
     public class GameEntity : Drawable
     {
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Properties
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public bool IsAlive { get; set; } = true;
         public Vector2f Position { get; set; } = new Vector2f(0f, 0f);
         public float Rotation { get; set; } = 0f;
-        public float Velocity { get; set; } = 0f;
+
+        /// <summary>
+        /// SFML uses degrees, so we create this property as readonly
+        /// </summary>
+        public float RotationInRads
+        {
+            get
+            {
+                return (float) (Math.PI * Rotation / 180.0);
+            }
+        }
+
 
         #endregion
 
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        #region Private Helpers
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>
+        /// Private helper method used to ensure that game entities will "wrap around" as the move through the main
+        ///    game window
+        /// </summary>
+        protected void HandleWrapAround()
+        {
+            // Get current position
+            Vector2f pos = Position;
+
+            // See if it needs to be changed
+            if (pos.X > Game.WindowWidth)     pos.X = 0;
+            if (pos.X < 0)                    pos.X = Game.WindowWidth;
+            if (pos.Y > Game.WindowHeight)    pos.Y = 0;
+            if (pos.Y < 0)                    pos.Y = Game.WindowHeight;
+
+            // Change the position if needed
+            if ( Position != pos)
+            {
+                Position = pos;
+            }
+        }
+
+        #endregion
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Methods
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
         /// Kill this entity
@@ -52,22 +95,24 @@ namespace SpaceshipGame.net
         }
 
         /// <summary>
-        /// Update the object based on time passed.  By default, we will move the object based on it's
-        ///    rotation and velocity
+        /// Update the object based on time passed.  Derived classes should implement this method and update
+        ///    themselves accourdingly.  Call the base class to handle "wrap around" at the end of your
+        ///    Update() code.
         /// </summary>
-        public void Update(Int32 delta)
+        public virtual void Update(Int32 deltaTime)
         {
-
+            // By Default, make all entities "wrap around" the screen
+            HandleWrapAround();
         }
 
         /// <summary>
-        /// Impement the "Drawable" interface from SFML.Graphics
+        /// From Drawable interface, implement the Draw method.  Derived classes should implement this method
+        ///    and draw themselves accordingly.
         /// </summary>
         /// <param name="target"></param>
         /// <param name="states"></param>
-        public void Draw(RenderTarget target, RenderStates states)
+        public virtual void Draw(RenderTarget target, RenderStates states)
         {
-
         }
 
         #endregion
