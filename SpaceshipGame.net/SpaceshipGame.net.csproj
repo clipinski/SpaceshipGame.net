@@ -20,6 +20,9 @@
     <None Update="gameconfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="gfx\bullet.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="gfx\explode.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

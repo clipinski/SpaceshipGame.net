@@ -241,7 +241,9 @@ namespace SpaceshipGame.net
                 Window.Close();
             }
 
+            //////////////////////////
             // Player ship 1
+            //////////////////////////
             if (Keyboard.IsKeyPressed(Keyboard.Key.A))
             {
                 _playerShip1.TurnLeft();
@@ -250,9 +252,15 @@ namespace SpaceshipGame.net
             {
                 _playerShip1.TurnRight();
             }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.F))
+            {
+                _playerShip1.Fire();
+            }
             _playerShip1.EnginesOn = Keyboard.IsKeyPressed(Keyboard.Key.D);
 
+            //////////////////////////
             // Player ship 2
+            //////////////////////////
             if (Keyboard.IsKeyPressed(Keyboard.Key.Numpad4))
             {
                 _playerShip2.TurnLeft();
@@ -260,6 +268,10 @@ namespace SpaceshipGame.net
             if (Keyboard.IsKeyPressed(Keyboard.Key.Numpad5))
             {
                 _playerShip2.TurnRight();
+            }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Add))
+            {
+                _playerShip2.Fire();
             }
             _playerShip2.EnginesOn = Keyboard.IsKeyPressed(Keyboard.Key.Numpad6);
 
@@ -279,7 +291,7 @@ namespace SpaceshipGame.net
             while (Window.IsOpen)
             {
                 // Delta time in ms per frame
-                Int32 deltaTime = GameClock.Restart().AsMilliseconds();
+                Int32 deltaTime = 0;
 
                 Window.DispatchEvents();
 

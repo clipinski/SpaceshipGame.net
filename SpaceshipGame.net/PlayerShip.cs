@@ -1,4 +1,28 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////////
+// MIT License
+//
+// Copyright (c) 2019 Craig J. Lipinski
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+///////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using SFML.System;
@@ -9,9 +33,10 @@ namespace SpaceshipGame.net
     public class PlayerShip : GameEntity
     {
         // Internals
-        private Sprite[] _shipSprites;              // List of sprites we use when drawing this ship
-        private Sprite   _curSprite;                // Current sprite to be drawn this frame
-        private Int32    _thrustFrameCounter;       // Counter of frames drawn while the engines are on, used to animate thrusters
+        private Sprite[] _sprites = null;          // List of sprites we use when drawing this ship
+        private Sprite   _curSprite = null;        // Current sprite to be drawn this frame
+        private Int32    _thrustFrameCounter = 0;  // Counter of frames drawn while the engines are on, used to animate thrusters
+        private Int32    _lastBulletFiredTime = 0; // Used to keep a resonable fire rate when holding down the fire button
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Properties
@@ -26,7 +51,18 @@ namespace SpaceshipGame.net
         /// <summary>
         /// Velocity vector for the ship
         /// </summary>
-        public Vector2f Velocity { get; set; } = new Vector2f( 0f, 0f );
+        public Vector2f VelocityVector { get; set; } = new Vector2f( 0f, 0f );
+
+        /// <summary>
+        /// Gets the magnitude of the velocity vector
+        /// </summary>
+        public float Velocity
+        {
+            get
+            {
+                return (float) Math.Sqrt(VelocityVector.X * VelocityVector.X + VelocityVector.Y * VelocityVector.Y);
+            }
+        }
 
         /// <summary>
         /// Amount of thrust when applying engines
@@ -37,6 +73,11 @@ namespace SpaceshipGame.net
         /// How fast the ship can turn
         /// </summary>
         public float TurnSpeed { get; set; } = 2.0f;
+
+        /// <summary>
+        /// Delay between "firing" bullets, in msecs
+        /// </summary>
+        public Int32 FireRate { get; set; } = 500;
 
         #endregion
 
@@ -57,22 +98,25 @@ namespace SpaceshipGame.net
             img.CreateMaskFromColor(Color.Black);
 
             // Each ship consists of 4 sprites, used to animate the engines, so load them from that image
-            _shipSprites = new Sprite[4];
+            _sprites = new Sprite[4];
             for (int i = 0; i < 4; i++)
             {
                 // In this case, we know that each frame is 64x64.  
-                _shipSprites[i] = new Sprite(new Texture(img), new IntRect(0 + (64 * i), 0, 63, 63));
+                _sprites[i] = new Sprite(new Texture(img), new IntRect(0 + (64 * i), 0, 63, 63));
 
                 // We are going to scale each frame times 2
-                _shipSprites[i].Scale = new Vector2f(2.0f, 2.0f);
+                _sprites[i].Scale = new Vector2f(2.0f, 2.0f);
 
                 // Set the origin point of the image for rotation.  Since we know the coords will be
                 //  0 to 63 (64x64) then we know the center is at 31.5 x 31.5
-                _shipSprites[i].Origin = new Vector2f(31.5f, 31.5f);
+                _sprites[i].Origin = new Vector2f(31.5f, 31.5f);
             }
 
             // Set the default value for the current sprite to use when we draw ourselves
-            _curSprite = _shipSprites[0];
+            _curSprite = _sprites[0];
+
+            // Initialize last bullet fired time
+            _lastBulletFiredTime = Game.GameClock.ElapsedTime.AsMilliseconds();
         }
 
         /// <summary>
@@ -92,8 +136,31 @@ namespace SpaceshipGame.net
         }
 
         /// <summary>
-        /// In this class, we perform updates differently than the base class, so we hide the base class
-        ///    Update() and use this one instead.
+        /// Shoot a bullet!
+        /// </summary>
+        public void Fire()
+        {
+            // Make sure enough time has passed so we can fire another bullet
+            if (Game.GameClock.ElapsedTime.AsMilliseconds() - _lastBulletFiredTime >= FireRate)
+            {
+                // Create the bullet based on our position, rotation, and velocity
+                Bullet b = new Bullet()
+                {
+                    Position = this.Position,
+                    Rotation = this.Rotation,
+                    Velocity = 7f
+                };
+
+                // Add to the game entities list
+                Game.Entities.Add(b);
+
+                // Update last bullet fired time stamp
+                _lastBulletFiredTime = Game.GameClock.ElapsedTime.AsMilliseconds();
+            }
+        }
+
+        /// <summary>
+        /// Update the ship position, rotation, etc.
         /// </summary>
         public override void Update(Int32 deltaTime)
         {
@@ -101,18 +168,18 @@ namespace SpaceshipGame.net
             {
                 // If our engines are on, apply forward thrusters in the direction the
                 //   ship is pointing.
-                Velocity += new Vector2f( (float)(Thrust * Math.Cos(RotationInRads)),
+                VelocityVector += new Vector2f( (float)(Thrust * Math.Cos(RotationInRads)),
                                           (float)(Thrust * Math.Sin(RotationInRads))  );
 
 
                 // Choose the correct image based on the frames we are counting
-                if      (_thrustFrameCounter < 2)  _curSprite = _shipSprites[1];   // "Low" Thrust Image
-                else if (_thrustFrameCounter < 4)  _curSprite = _shipSprites[2];   // "Medium" Thrust Image  
-                else if (_thrustFrameCounter < 6)  _curSprite = _shipSprites[3];   // "High" Thrust Image
+                if      (_thrustFrameCounter < 2)  _curSprite = _sprites[1];   // "Low" Thrust Image
+                else if (_thrustFrameCounter < 4)  _curSprite = _sprites[2];   // "Medium" Thrust Image  
+                else if (_thrustFrameCounter < 6)  _curSprite = _sprites[3];   // "High" Thrust Image
                 else
                 {
                     // Back to "Low" Thrust Image
-                    _curSprite = _shipSprites[1];
+                    _curSprite = _sprites[1];
 
                     // Reset frame counter
                     _thrustFrameCounter = 0;
@@ -124,14 +191,14 @@ namespace SpaceshipGame.net
             else
             {
                 // Display the "engines off" sprite
-                _curSprite = _shipSprites[0];
+                _curSprite = _sprites[0];
 
                 // Reset thrust frame counter
                 _thrustFrameCounter = 0;
             }
 
             // Update position based on velocity vector
-            Position += Velocity;
+            Position += VelocityVector;
 
             // Call base class
             base.Update(deltaTime);
