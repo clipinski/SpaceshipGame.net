@@ -40,8 +40,8 @@ namespace SpaceshipGame.net
 
         static private IConfiguration _settings = null;
         static private RenderWindow _window = null;
-        static private uint? _windowWidth = null;
-        static private uint? _windowHeight = null;
+        static private uint _windowWidth = 0;
+        static private uint _windowHeight = 0;
         static private Clock _clock = null;
         static private List<GameEntity> _entities = null;
 
@@ -79,7 +79,17 @@ namespace SpaceshipGame.net
         {
             get
             {
-                return _windowWidth ?? (_windowWidth = uint.Parse(Settings["WindowWidth"])).Value;
+                // Try and get the window width from the config file.  It that fails,
+                //   Just default to 1920
+                if (_windowWidth == 0)
+                {
+                    if (!uint.TryParse(Settings["WindowWidth"], out _windowWidth))
+                    {
+                        _windowWidth = 1920;
+                    }
+                }
+
+                return _windowWidth;
             }
         }
 
@@ -90,7 +100,17 @@ namespace SpaceshipGame.net
         {
             get
             {
-                return _windowHeight ?? (_windowHeight = uint.Parse(Settings["WindowHeight"])).Value;
+                // Try and get the window height from the config file.  It that fails,
+                //   Just default to 1080
+                if (_windowHeight == 0)
+                {
+                    if (!uint.TryParse(Settings["WindowHeight"], out _windowHeight))
+                    {
+                        _windowHeight = 1080;
+                    }
+                }
+
+                return _windowHeight;
             }
         }
 
@@ -105,8 +125,21 @@ namespace SpaceshipGame.net
                 // See if we need to create and setup the main window
                 if (_window == null)
                 {
+                    // Window style
+                    Styles windowStyle = Styles.Default;
+
+                    // Check for full screen setting in the config file, allow for the possibility
+                    //  that the setting might not exist or might not be set properly.
+                    if (bool.TryParse(Settings["FullScreen"], out bool fullScreen))
+                    {
+                        if (fullScreen)
+                        {
+                            windowStyle = Styles.Fullscreen;
+                        }
+                    }
+
                     // Create new render window
-                    _window = new RenderWindow(new VideoMode(WindowWidth, WindowHeight), "SpaceshipGame.net");
+                    _window = new RenderWindow(new VideoMode(WindowWidth, WindowHeight), "SpaceshipGame.net", windowStyle);
 
                     // Add an event handler to handle when the user presses the "X" (close) button
                     _window.Closed += (sender, e) =>
@@ -118,7 +151,13 @@ namespace SpaceshipGame.net
                     _window.SetFramerateLimit(60);
 
                     // Allow vsync to be optional, based on settings
-                    _window.SetVerticalSyncEnabled(bool.Parse(Settings["EnableVSync"]));
+                    if (bool.TryParse(Settings["EnableVSync"], out bool vsyncEnabled))
+                    {
+                        if (vsyncEnabled)
+                        {
+                            _window.SetVerticalSyncEnabled(bool.Parse(Settings["EnableVSync"]));
+                        }
+                    }  
                 }
 
                 return _window;
@@ -174,13 +213,15 @@ namespace SpaceshipGame.net
             // Create player ship 1
             _playerShip1 = new PlayerShip("gfx/ShipFrames1.bmp")
             {
-                Position = new Vector2f(50f, 400f)
+                // Initial position will be center height, 100px from the left
+                Position = new Vector2f(100, WindowHeight / 2)
             };
 
             // Create player ship 1
             _playerShip2 = new PlayerShip("gfx/ShipFrames2.bmp")
             {
-                Position = new Vector2f(1050f, 400f),
+                // Initial position will be center height, 100px from the right
+                Position = new Vector2f(WindowWidth - 100, WindowHeight / 2),
                 Rotation = 180
             };
 
@@ -194,6 +235,12 @@ namespace SpaceshipGame.net
         /// </summary>
         static void HandleUserInput()
         {
+            // Close the game if the escape key is pressed
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Escape))
+            {
+                Window.Close();
+            }
+
             // Player ship 1
             if (Keyboard.IsKeyPressed(Keyboard.Key.A))
             {

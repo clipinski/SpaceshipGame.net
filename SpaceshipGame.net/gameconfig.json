@@ -1,5 +1,6 @@
 {
-  "WindowWidth"  : "1280",
-  "WindowHeight" : "900",
+  "WindowWidth"  : "1920",
+  "WindowHeight" : "1080",
+  "FullScreen"   : "false",
   "EnableVSync"  : "true"
  }
