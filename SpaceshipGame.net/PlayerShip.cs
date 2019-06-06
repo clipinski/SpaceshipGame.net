@@ -35,7 +35,7 @@ namespace SpaceshipGame.net
         // Internals
         private Sprite[] _sprites = null;          // List of sprites we use when drawing this ship
         private Sprite   _curSprite = null;        // Current sprite to be drawn this frame
-        private Int32    _thrustFrameCounter = 0;  // Counter of frames drawn while the engines are on, used to animate thrusters
+        private Int32    _frameCounter = 0;        // Counter of frames drawn while the engines are on, used to animate thrusters
         private Int32    _lastBulletFiredTime = 0; // Used to keep a resonable fire rate when holding down the fire button
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +146,7 @@ namespace SpaceshipGame.net
                 // Create the bullet based on our position, rotation, and velocity
                 Bullet b = new Bullet()
                 {
+                    Lifespan = 3000,
                     Position = this.Position,
                     Rotation = this.Rotation,
                     Velocity = 7f
@@ -172,21 +173,14 @@ namespace SpaceshipGame.net
                                           (float)(Thrust * Math.Sin(RotationInRads))  );
 
 
-                // Choose the correct image based on the frames we are counting
-                if      (_thrustFrameCounter < 2)  _curSprite = _sprites[1];   // "Low" Thrust Image
-                else if (_thrustFrameCounter < 4)  _curSprite = _sprites[2];   // "Medium" Thrust Image  
-                else if (_thrustFrameCounter < 6)  _curSprite = _sprites[3];   // "High" Thrust Image
-                else
-                {
-                    // Back to "Low" Thrust Image
-                    _curSprite = _sprites[1];
-
-                    // Reset frame counter
-                    _thrustFrameCounter = 0;
-                }
+                // Move through our "engines" on sprites, which will be indexes 1,2 & 3
+                // So we will change every 2 frames
+                int idx = (_frameCounter / 6) + 1;
+                _curSprite = _sprites[idx];
+                if (_frameCounter > 6) _frameCounter = 0;
 
                 // Add to the count of the frames that we have drawn while the engines are on
-                _thrustFrameCounter++;
+                _frameCounter++;
             }
             else
             {
@@ -194,7 +188,7 @@ namespace SpaceshipGame.net
                 _curSprite = _sprites[0];
 
                 // Reset thrust frame counter
-                _thrustFrameCounter = 0;
+                _frameCounter = 0;
             }
 
             // Update position based on velocity vector

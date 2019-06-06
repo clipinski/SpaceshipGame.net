@@ -298,6 +298,7 @@ namespace SpaceshipGame.net
                 // Handle input from the user
                 HandleUserInput();
 
+                // Draw a black back
                 Window.Clear(Color.Black);
 
                 // Loop through entities
@@ -309,6 +310,9 @@ namespace SpaceshipGame.net
                     // Draw it
                     Window.Draw(entity);
                 });
+
+                // Remove all "dead" entities
+                Entities.RemoveAll((entity) => entity.IsAlive == false);
 
                 Window.Display();
             }

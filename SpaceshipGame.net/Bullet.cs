@@ -36,6 +36,7 @@ namespace SpaceshipGame.net
         private Sprite[] _sprites = null;  // List of sprites we use when drawing the bullet
         private Sprite _curSprite = null;  // Current sprite to be drawn this frame
         private Int32 _frameCounter = 0;   // Frame counter used to animate sprites
+        private Int32 _creationTime = 0;   // Keep track of when we got created so we can track our lifespan
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Properties
@@ -85,6 +86,9 @@ namespace SpaceshipGame.net
 
             // Set the default value for the current sprite to use when we draw ourselves
             _curSprite = _sprites[0];
+
+            // Store creation time for this bullet
+            _creationTime = Game.GameClock.ElapsedTime.AsMilliseconds();
         }
 
         /// <summary>
@@ -93,14 +97,24 @@ namespace SpaceshipGame.net
         /// </summary>
         public override void Update(Int32 deltaTime)
         {
-            // Update x and y positions based on the current velocity 
-            //   and rotation angle.
-            Position += new Vector2f( (float)(Velocity * Math.Cos(RotationInRads)), 
-                                      (float)(Velocity * Math.Sin(RotationInRads))  );
+            // Check our lifespan
+            if ( (Game.GameClock.ElapsedTime.AsMilliseconds() - _creationTime) > Lifespan)
+            {
+                // Past our lifespan, so mark oursleves as "dead"
+                Kill();
+            }
+            else
+            {
+                // Update x and y positions based on the current velocity 
+                //   and rotation angle.
+                Position += new Vector2f((float)(Velocity * Math.Cos(RotationInRads)),
+                                          (float)(Velocity * Math.Sin(RotationInRads)));
 
-            // Figure out what frame to draw
-            _curSprite = _sprites[_frameCounter++ / 10];
-            if (_frameCounter > 30) _frameCounter = 0;
+                // Move through our sprites, which will be indexes 0-3
+                // Display a different image every 5 frames
+                _curSprite = _sprites[_frameCounter++ / 5];
+                if (_frameCounter > 15) _frameCounter = 0;
+            }
 
             // Call base class
             base.Update(deltaTime);
