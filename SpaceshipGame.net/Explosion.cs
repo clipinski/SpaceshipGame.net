@@ -30,87 +30,59 @@ using SFML.Graphics;
 
 namespace SpaceshipGame.net
 {
-    public class Bullet : GameEntity 
+    public class Explosion : GameEntity
     {
         // Internals
         private Sprite[] _sprites = null;  // List of sprites we use when drawing the bullet
         private Sprite _curSprite = null;  // Current sprite to be drawn this frame
         private Int32 _frameCounter = 0;   // Frame counter used to animate sprites
-        private Int32 _creationTime = 0;   // Keep track of when we got created so we can track our lifespan
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        #region Properties
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /// <summary>
-        /// Velocity vector for the ship
-        /// </summary>
-        public Vector2f VelocityVector { get; set; } = new Vector2f(0f, 0f);
-
-        /// <summary>
-        /// Lifespan (in msecs)
-        /// </summary>
-        public Int32 Lifespan { get; set; } = 0;
-
-        #endregion
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        #region Methods
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public Bullet()
+        public Explosion()
         {
             // Load the image from the path passed in
-            Image img = new Image("gfx/bullet.bmp");
+            Image img = new Image("gfx/explode.bmp");
 
             // Setup mask
             img.CreateMaskFromColor(Color.Black);
 
-            // Each ship consists of 4 sprites, used to animate the engines, so load them from that image
-            _sprites = new Sprite[4];
-            for (int i = 0; i < 4; i++)
+            // The explosion consists of 10 sprites, so load them from that image
+            _sprites = new Sprite[10];
+            for (int i = 0; i < 10; i++)
             {
-                // In this case, we know that each frame is 7x7  
-                _sprites[i] = new Sprite(new Texture(img), new IntRect(0 + (7 * i), 0, 6, 6));
+                // In this case, we know that each frame is 64x64.  
+                _sprites[i] = new Sprite(new Texture(img), new IntRect(0 + (64 * i), 0, 63, 63));
 
-                // We are going to scale each frame times 2
-                _sprites[i].Scale = new Vector2f(2.0f, 2.0f);
+                // We are going to scale each frame times 2.75
+                // (Make it a little bigger than the ships)
+                _sprites[i].Scale = new Vector2f(2.75f, 2.75f);
 
                 // Set the origin point of the image for rotation.  Since we know the coords will be
-                //  0 to 6 (7x7) then we know the center is at 3.5, 3.5
-                _sprites[i].Origin = new Vector2f(3.5f, 3.5f);
+                //  0 to 63 (64x64) then we know the center is at 31.5 x 31.5
+                _sprites[i].Origin = new Vector2f(31.5f, 31.5f);
             }
 
             // Set the default value for the current sprite to use when we draw ourselves
             _curSprite = _sprites[0];
-
-            // Store creation time for this bullet
-            _creationTime = Game.GameClock.ElapsedTime.AsMilliseconds();
         }
 
         /// <summary>
-        /// Update bullet position and image
+        /// Update the explosion image
         /// </summary>
+        /// <param name="deltaTime"></param>
         public override void Update(Int32 deltaTime)
         {
-            // Check our lifespan
-            if ( (Game.GameClock.ElapsedTime.AsMilliseconds() - _creationTime) > Lifespan)
+            if (IsAlive)
             {
-                // Past our lifespan, so mark oursleves as "dead"
-                Kill();
-            }
-            else
-            {
-                // Update position based on velocity vector
-                Position += VelocityVector;
-
-                // Move through our sprites, which will be indexes 0-3
-                // Display a different image every 5 frames
-                _curSprite = _sprites[_frameCounter++ / 5];
-                if (_frameCounter > 15) _frameCounter = 0;
+                // Move through our sprites, which will be indexes 0-9
+                // Display a different image every 2 frames
+                _curSprite = _sprites[_frameCounter++ / 2];
+                if (_frameCounter > 18)
+                {
+                    Kill();
+                }
             }
 
             // Call base class
@@ -131,7 +103,5 @@ namespace SpaceshipGame.net
             // And draw it!
             _curSprite.Draw(target, states);
         }
-
-        #endregion
     }
 }
