@@ -129,7 +129,7 @@ namespace SpaceshipGame.net
 
             // NOTE: Allow a few frames of invulernability so the ship that fires the bullet
             //        won't blow itself up.
-            if (Lifetime > 1600)
+            if (Lifetime > 160)
             {
                 // NOTE: Width of the sprite is 7 pixels and we are scaled x 2
                 _collisionRect.Left = (int)(Position.X - 7f);

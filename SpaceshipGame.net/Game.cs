@@ -43,14 +43,18 @@ namespace SpaceshipGame.net
         static private uint _windowWidth = 0;
         static private uint _windowHeight = 0;
         static private Clock _clock = null;
-        static private List<GameEntity> _entities = new List<GameEntity>();
-        static private List<GameEntity> _entitiesWaitingToSpawn = new List<GameEntity>();
         static private Sprite _starfield = null;
         static private Int32 _lastFrameTime = 0;
 
         // Hold on to some references to the player ships
         static private PlayerShip _playerShip1 = null;
         static private PlayerShip _playerShip2 = null;
+
+        // Main list of game entities
+        static private List<GameEntity> _entities = new List<GameEntity>();
+
+        // List of entities queued up to spawn in
+        static private List<GameEntity> _entitiesWaitingToSpawn = new List<GameEntity>();
 
         #endregion
 
@@ -217,12 +221,34 @@ namespace SpaceshipGame.net
                 Rotation = 180
             };
 
-            // Add them to our entities list
+            // Add them to our entities list when we can
             Spawn(_playerShip1);
             Spawn(_playerShip2);
 
+            // Create event handlers for when the player ships are killed
+            _playerShip1.OnKilled += OnShipKilled;
+            _playerShip2.OnKilled += OnShipKilled;
+
             // Finally, generate our background "starfield"
             GenerateStarfield(200);
+        }
+
+        /// <summary>
+        /// Event Handler called when a player ship is "killed"
+        /// </summary>
+        /// <param name="sender">The player ship object reference</param>
+        /// <param name="e">Empty</param>
+        static void OnShipKilled(Object sender, EventArgs e)
+        {
+            // Get the player ship reference
+            PlayerShip ship = (PlayerShip)sender;
+
+            // Spawn an explosion at that location
+            Spawn(new Explosion()
+            {
+                Position = ship.Position,
+                Rotation = ship.Rotation
+            });
         }
 
         /// <summary>

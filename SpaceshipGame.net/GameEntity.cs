@@ -64,6 +64,10 @@ namespace SpaceshipGame.net
             }
         }
 
+        /// <summary>
+        /// Event handler for when this entity is "killed"
+        /// </summary>
+        public event EventHandler OnKilled;
 
         #endregion
 
@@ -105,6 +109,9 @@ namespace SpaceshipGame.net
         public void Kill()
         {
             IsAlive = false;
+
+            // Call event handler, if one has been set
+            OnKilled?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
