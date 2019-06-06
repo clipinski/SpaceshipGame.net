@@ -192,6 +192,17 @@ namespace SpaceshipGame.net
             // Update position based on velocity vector
             Position += VelocityVector;
 
+            // Update collision rect directly, we don't want to make a new object every frame
+            //   because that would be inefecient/costly.
+
+            // NOTE: Width of the sprite is 64 pixels and we are scaled x 2
+            //   But we are going to pull that in a bit, to better represent
+            //   the "body" of the ship.
+            _collisionRect.Left = (int)(Position.X - 40f);
+            _collisionRect.Top = (int)(Position.Y - 40);
+            _collisionRect.Height = 80;
+            _collisionRect.Width = 80;
+
             // Call base class
             base.Update(deltaTime);
         }

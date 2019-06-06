@@ -52,6 +52,17 @@ namespace SpaceshipGame.net
         /// </summary>
         public Int32 Lifespan { get; set; } = 0;
 
+        /// <summary>
+        /// Returns the current amount of time (in msecs) that the bullet has been "alive"
+        /// </summary>
+        public Int32 Lifetime
+        {
+            get
+            {
+                return Game.GameClock.ElapsedTime.AsMilliseconds() - _creationTime;
+            }
+        }
+
         #endregion
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +108,7 @@ namespace SpaceshipGame.net
         public override void Update(Int32 deltaTime)
         {
             // Check our lifespan
-            if ( (Game.GameClock.ElapsedTime.AsMilliseconds() - _creationTime) > Lifespan)
+            if ( Lifetime > Lifespan)
             {
                 // Past our lifespan, so mark oursleves as "dead"
                 Kill();
@@ -111,6 +122,20 @@ namespace SpaceshipGame.net
                 // Display a different image every 5 frames
                 _curSprite = _sprites[_frameCounter++ / 5];
                 if (_frameCounter > 15) _frameCounter = 0;
+            }
+
+            // Update collision rect directly, we don't want to make a new object every frame
+            //   because that would be inefecient/costly.
+
+            // NOTE: Allow a few frames of invulernability so the ship that fires the bullet
+            //        won't blow itself up.
+            if (Lifetime > 1600)
+            {
+                // NOTE: Width of the sprite is 7 pixels and we are scaled x 2
+                _collisionRect.Left = (int)(Position.X - 7f);
+                _collisionRect.Top = (int)(Position.Y - 7f);
+                _collisionRect.Height = 14;
+                _collisionRect.Width = 14;
             }
 
             // Call base class

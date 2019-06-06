@@ -347,6 +347,20 @@ namespace SpaceshipGame.net
 
                     // Draw it
                     Window.Draw(entity);
+
+                    // Check for collisions with all other entities
+                    Entities.ForEach((entityToCheck) =>
+                    {
+                        // Make sure and not check an entity against itself
+                        if (entityToCheck != entity)
+                        {
+                            if (entityToCheck.CollisionRect.Intersects(entity.CollisionRect))
+                            {
+                                entity.Kill();
+                                entityToCheck.Kill();
+                            }
+                        }
+                    });
                 });
 
                 // Remove all "dead" entities

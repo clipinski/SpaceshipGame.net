@@ -30,8 +30,10 @@ using SFML.Graphics;
 
 namespace SpaceshipGame.net
 {
-    public class GameEntity : Drawable
+    public abstract class GameEntity : Drawable
     {
+        protected IntRect _collisionRect  = new IntRect(0, 0, 0, 0);
+
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Properties
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +50,17 @@ namespace SpaceshipGame.net
             get
             {
                 return (float) (Math.PI * Rotation / 180.0);
+            }
+        }
+
+        /// <summary>
+        /// Get the collision rect for this entity
+        /// </summary>
+        public IntRect CollisionRect
+        {
+            get
+            {
+                return _collisionRect;
             }
         }
 
@@ -111,9 +124,7 @@ namespace SpaceshipGame.net
         /// </summary>
         /// <param name="target"></param>
         /// <param name="states"></param>
-        public virtual void Draw(RenderTarget target, RenderStates states)
-        {
-        }
+        public abstract void Draw(RenderTarget target, RenderStates states);
 
         #endregion
     }
