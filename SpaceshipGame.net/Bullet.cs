@@ -43,9 +43,9 @@ namespace SpaceshipGame.net
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
-        /// Velocity of the bullet, which will travel in a straight line based on rotation
+        /// Velocity vector for the ship
         /// </summary>
-        public float Velocity { get; set; } = 0f;
+        public Vector2f VelocityVector { get; set; } = new Vector2f(0f, 0f);
 
         /// <summary>
         /// Lifespan (in msecs)
@@ -105,10 +105,8 @@ namespace SpaceshipGame.net
             }
             else
             {
-                // Update x and y positions based on the current velocity 
-                //   and rotation angle.
-                Position += new Vector2f((float)(Velocity * Math.Cos(RotationInRads)),
-                                          (float)(Velocity * Math.Sin(RotationInRads)));
+                // Update position based on velocity vector
+                Position += VelocityVector;
 
                 // Move through our sprites, which will be indexes 0-3
                 // Display a different image every 5 frames

@@ -54,17 +54,6 @@ namespace SpaceshipGame.net
         public Vector2f VelocityVector { get; set; } = new Vector2f( 0f, 0f );
 
         /// <summary>
-        /// Gets the magnitude of the velocity vector
-        /// </summary>
-        public float Velocity
-        {
-            get
-            {
-                return (float) Math.Sqrt(VelocityVector.X * VelocityVector.X + VelocityVector.Y * VelocityVector.Y);
-            }
-        }
-
-        /// <summary>
         /// Amount of thrust when applying engines
         /// </summary>
         public float Thrust { get; set; } = 0.05f;
@@ -78,6 +67,11 @@ namespace SpaceshipGame.net
         /// Delay between "firing" bullets, in msecs
         /// </summary>
         public Int32 FireRate { get; set; } = 500;
+
+        /// <summary>
+        /// Bullet travel speed
+        /// </summary>
+        public float BulletSpeed { get; set; } = 7.0f;
 
         #endregion
 
@@ -149,8 +143,12 @@ namespace SpaceshipGame.net
                     Lifespan = 3000,
                     Position = this.Position,
                     Rotation = this.Rotation,
-                    Velocity = 7f
+                    VelocityVector = new Vector2f( (float)(BulletSpeed * Math.Cos(RotationInRads)),
+                                                   (float)(BulletSpeed * Math.Sin(RotationInRads)))
                 };
+
+                // Add in the ship's velocity
+                b.VelocityVector += this.VelocityVector;
 
                 // Add to the game entities list
                 Game.Entities.Add(b);
@@ -169,8 +167,8 @@ namespace SpaceshipGame.net
             {
                 // If our engines are on, apply forward thrusters in the direction the
                 //   ship is pointing.
-                VelocityVector += new Vector2f( (float)(Thrust * Math.Cos(RotationInRads)),
-                                          (float)(Thrust * Math.Sin(RotationInRads))  );
+                VelocityVector += new Vector2f((float)(Thrust * Math.Cos(RotationInRads)),
+                                               (float)(Thrust * Math.Sin(RotationInRads)));
 
 
                 // Move through our "engines" on sprites, which will be indexes 1,2 & 3
