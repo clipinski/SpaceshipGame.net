@@ -44,6 +44,8 @@ namespace SpaceshipGame.net
         static private uint _windowHeight = 0;
         static private Clock _clock = null;
         static private List<GameEntity> _entities = null;
+        static private Sprite _starfield = null;
+        static private Int32 _lastFrameTime = 0;
 
         // Hold on to some references to the player ships
         static private PlayerShip _playerShip1 = null;
@@ -228,6 +230,37 @@ namespace SpaceshipGame.net
             // Add them to our entities list
             Entities.Add(_playerShip1);
             Entities.Add(_playerShip2);
+
+            // Finally, generate our background "starfield"
+            GenerateStarfield(100);
+        }
+
+        /// <summary>
+        /// Generate a background of stars and save it as a sprite
+        /// </summary>
+        /// <param name="numStars">Number of stars to randomly generate</param>
+        static void GenerateStarfield(uint numStars)
+        {
+            Random random = new Random();
+            RenderTexture rt = new RenderTexture(WindowWidth, WindowHeight);
+
+            // Fill the texture with a black background
+            rt.Clear(Color.Black);
+
+            // Generate a random number of "stars", which will be simply randomly placed
+            //  tiny rectangles of random colors
+            for(uint i = 0; i < numStars; i++)
+            {
+                rt.Draw(new RectangleShape(new Vector2f(1f, 1f))
+                {
+                    Position = new Vector2f(random.Next(0, (int)WindowWidth), random.Next(0, (int)WindowHeight)),
+                    FillColor = new Color( (byte)random.Next(0, 255), (byte)random.Next(0,255), (byte)random.Next(0,255))
+                });
+            }
+
+            // Create the sprite we will use to draw the starfield because it would be very inneficient
+            //  to draw the stars individually each frame.
+            _starfield = new Sprite(rt.Texture);
         }
 
         /// <summary>
@@ -291,15 +324,17 @@ namespace SpaceshipGame.net
             while (Window.IsOpen)
             {
                 // Delta time in ms per frame
-                Int32 deltaTime = 0;
+                Int32 deltaTime = GameClock.ElapsedTime.AsMilliseconds() - _lastFrameTime;
 
                 Window.DispatchEvents();
 
                 // Handle input from the user
                 HandleUserInput();
 
-                // Draw a black back
-                Window.Clear(Color.Black);
+                // First, draw our starfield backgound.  All entities will be draw later,
+                //  so as to appear "on top" of this.  This also efectively "clears" the
+                //  screen for each frame.
+                Window.Draw(_starfield);
 
                 // Loop through entities
                 Entities.ForEach( (entity) =>
@@ -314,7 +349,11 @@ namespace SpaceshipGame.net
                 // Remove all "dead" entities
                 Entities.RemoveAll((entity) => entity.IsAlive == false);
 
+                // Display everything we have draw so far
                 Window.Display();
+
+                // Finally, update last frame time
+                _lastFrameTime -= GameClock.ElapsedTime.AsMilliseconds();
             }
         }
     }
