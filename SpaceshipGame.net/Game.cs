@@ -232,7 +232,7 @@ namespace SpaceshipGame.net
             Entities.Add(_playerShip2);
 
             // Finally, generate our background "starfield"
-            GenerateStarfield(100);
+            GenerateStarfield(200);
         }
 
         /// <summary>
@@ -251,10 +251,13 @@ namespace SpaceshipGame.net
             //  tiny rectangles of random colors
             for(uint i = 0; i < numStars; i++)
             {
-                rt.Draw(new RectangleShape(new Vector2f(1f, 1f))
+                int starSize = random.Next(1, 3);
+                rt.Draw(new RectangleShape(new Vector2f(starSize, starSize))
                 {
                     Position = new Vector2f(random.Next(0, (int)WindowWidth), random.Next(0, (int)WindowHeight)),
-                    FillColor = new Color( (byte)random.Next(0, 255), (byte)random.Next(0,255), (byte)random.Next(0,255))
+
+                    // Give some variance in color, but keep mostly "white"
+                    FillColor = new Color( (byte)random.Next(200, 255), (byte)random.Next(200,255), (byte)random.Next(200,255))
                 });
             }
 
