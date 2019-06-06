@@ -43,7 +43,8 @@ namespace SpaceshipGame.net
         static private uint _windowWidth = 0;
         static private uint _windowHeight = 0;
         static private Clock _clock = null;
-        static private List<GameEntity> _entities = null;
+        static private List<GameEntity> _entities = new List<GameEntity>();
+        static private List<GameEntity> _entitiesWaitingToSpawn = new List<GameEntity>();
         static private Sprite _starfield = null;
         static private Int32 _lastFrameTime = 0;
 
@@ -189,17 +190,6 @@ namespace SpaceshipGame.net
             }
         }
 
-        /// <summary>
-        /// List of game entities
-        /// </summary>
-        static public List<GameEntity> Entities
-        {
-            get
-            {
-                return _entities ?? (_entities = new List<GameEntity>());
-            }
-        }
-
         #endregion
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,8 +218,8 @@ namespace SpaceshipGame.net
             };
 
             // Add them to our entities list
-            Entities.Add(_playerShip1);
-            Entities.Add(_playerShip2);
+            Spawn(_playerShip1);
+            Spawn(_playerShip2);
 
             // Finally, generate our background "starfield"
             GenerateStarfield(200);
@@ -313,6 +303,17 @@ namespace SpaceshipGame.net
 
         }
 
+        /// <summary>
+        /// Inteface to add game entities.  We need to protect the internal list of entities because
+        ///   we don't want someone modifying the list while we are looping through it
+        /// </summary>
+        /// <param name="e">Entity to spawn</param>
+        static public void Spawn(GameEntity e)
+        {
+            // So add to a list for now, and we'll copy these to the main list later when we know
+            //  it will be safe.
+            _entitiesWaitingToSpawn.Add(e);
+        }
 
         /// <summary>
         /// Main entry point for the game program
@@ -339,8 +340,12 @@ namespace SpaceshipGame.net
                 //  screen for each frame.
                 Window.Draw(_starfield);
 
+                // Add any entities waiting to "spawn" to the main list
+                _entities.AddRange(_entitiesWaitingToSpawn);
+                _entitiesWaitingToSpawn.Clear();
+
                 // Loop through entities
-                Entities.ForEach( (entity) =>
+                _entities.ForEach( (entity) =>
                 {
                     // Update each one
                     entity.Update(deltaTime);
@@ -349,7 +354,7 @@ namespace SpaceshipGame.net
                     Window.Draw(entity);
 
                     // Check for collisions with all other entities
-                    Entities.ForEach((entityToCheck) =>
+                    _entities.ForEach((entityToCheck) =>
                     {
                         // Make sure and not check an entity against itself
                         if (entityToCheck != entity)
@@ -364,7 +369,7 @@ namespace SpaceshipGame.net
                 });
 
                 // Remove all "dead" entities
-                Entities.RemoveAll((entity) => entity.IsAlive == false);
+                _entities.RemoveAll((entity) => entity.IsAlive == false);
 
                 // Display everything we have draw so far
                 Window.Display();

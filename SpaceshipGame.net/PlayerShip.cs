@@ -150,8 +150,8 @@ namespace SpaceshipGame.net
                 // Add in the ship's velocity
                 b.VelocityVector += this.VelocityVector;
 
-                // Add to the game entities list
-                Game.Entities.Add(b);
+                // Tell the game to "spawn" this new bullet
+                Game.Spawn(b);
 
                 // Update last bullet fired time stamp
                 _lastBulletFiredTime = Game.GameClock.ElapsedTime.AsMilliseconds();
