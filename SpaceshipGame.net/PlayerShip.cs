@@ -66,7 +66,7 @@ namespace SpaceshipGame.net
         /// <summary>
         /// Delay between "firing" bullets, in msecs
         /// </summary>
-        public Int32 FireRate { get; set; } = 500;
+        public Int32 FireRate { get; set; } = 350;
 
         /// <summary>
         /// Bullet travel speed
