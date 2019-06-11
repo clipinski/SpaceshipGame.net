@@ -441,9 +441,6 @@ namespace SpaceshipGame.net
 
                 Window.DispatchEvents();
 
-                // Handle input from the user
-                HandleUserInput();
-
                 // First, draw our starfield backgound.  All entities will be draw later,
                 //  so as to appear "on top" of this.  This also efectively "clears" the
                 //  screen for each frame.
@@ -451,6 +448,9 @@ namespace SpaceshipGame.net
 
                 // Handle spawning any entities waiting
                 SpawnEntities();
+
+                // Handle input from the user
+                HandleUserInput();
 
                 // Loop through entities
                 _entities.ForEach( (entity) =>
