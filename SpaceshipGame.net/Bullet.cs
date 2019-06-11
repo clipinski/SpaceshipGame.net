@@ -59,7 +59,7 @@ namespace SpaceshipGame.net
         {
             get
             {
-                return Game.GameClock.ElapsedTime.AsMilliseconds() - _creationTime;
+                return Game.Now - _creationTime;
             }
         }
 
@@ -99,7 +99,7 @@ namespace SpaceshipGame.net
             _curSprite = _sprites[0];
 
             // Store creation time for this bullet
-            _creationTime = Game.GameClock.ElapsedTime.AsMilliseconds();
+            _creationTime = Game.Now;
         }
 
         /// <summary>

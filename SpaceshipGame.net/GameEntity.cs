@@ -38,7 +38,7 @@ namespace SpaceshipGame.net
         #region Properties
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public bool IsAlive { get; set; } = true;
+        public bool IsAlive { get; set; } = false;  // Entities won't be set to alive until they are added to the game
         public Vector2f Position { get; set; } = new Vector2f(0f, 0f);
         public float Rotation { get; set; } = 0f;
 

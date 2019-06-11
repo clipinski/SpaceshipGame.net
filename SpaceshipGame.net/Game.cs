@@ -45,6 +45,7 @@ namespace SpaceshipGame.net
         static private Clock _clock = null;
         static private Sprite _starfield = null;
         static private Int32 _lastFrameTime = 0;
+        static private Random _random = null;
 
         // Hold on to some references to the player ships
         static private PlayerShip _playerShip1 = null;
@@ -53,8 +54,8 @@ namespace SpaceshipGame.net
         // Main list of game entities
         static private List<GameEntity> _entities = new List<GameEntity>();
 
-        // List of entities queued up to spawn in
-        static private List<GameEntity> _entitiesWaitingToSpawn = new List<GameEntity>();
+        // List of entities queued up to spawn in and the time they should be spawned in
+        static private List<Tuple<GameEntity, Int32>> _entitiesWaitingToSpawn = new List<Tuple<GameEntity, Int32>>();
 
         #endregion
 
@@ -183,6 +184,17 @@ namespace SpaceshipGame.net
         }
 
         /// <summary>
+        /// Returns the current elapsed time from the game clock as milliseconds
+        /// </summary>
+        static public Int32 Now
+        {
+            get
+            {
+                return GameClock.ElapsedTime.AsMilliseconds();
+            }
+        }
+
+        /// <summary>
         /// Return the desired frame time in milliseconds.  For our game, our target framerate
         ///   is 60fps
         /// </summary>
@@ -191,6 +203,14 @@ namespace SpaceshipGame.net
             get
             {
                 return ( (Int32) (1000f / 60f) );
+            }
+        }
+
+        static public Random Random
+        {
+            get
+            {
+                return _random ?? (_random = new Random());
             }
         }
 
@@ -222,8 +242,8 @@ namespace SpaceshipGame.net
             };
 
             // Add them to our entities list when we can
-            Spawn(_playerShip1);
-            Spawn(_playerShip2);
+            Spawn(_playerShip1, Now);
+            Spawn(_playerShip2, Now);
 
             // Create event handlers for when the player ships are killed
             _playerShip1.OnKilled += OnShipKilled;
@@ -248,7 +268,19 @@ namespace SpaceshipGame.net
             {
                 Position = ship.Position,
                 Rotation = ship.Rotation
-            });
+            }, Now);
+
+            // If our ship is dead, then it has been removed from the
+            //   the game entities list.  However, we still have this reference
+            //   which we can reuse to save the expense of re-creating
+            //   the ship object
+            // So we will move the ship to a random location and "respawn" it
+            ship.Position = new Vector2f(Random.Next(0, (int)WindowWidth), Random.Next(0, (int)WindowHeight));
+            ship.Rotation = Random.Next(0, 360);
+            ship.VelocityVector = new Vector2f(0f, 0f);
+
+            // Re-spawn the ship in 2 seconds
+            Spawn(ship, Now + 2000);
         }
 
         /// <summary>
@@ -257,7 +289,6 @@ namespace SpaceshipGame.net
         /// <param name="numStars">Number of stars to randomly generate</param>
         static void GenerateStarfield(uint numStars)
         {
-            Random random = new Random();
             RenderTexture rt = new RenderTexture(WindowWidth, WindowHeight);
 
             // Fill the texture with a black background
@@ -267,13 +298,13 @@ namespace SpaceshipGame.net
             //  tiny rectangles of random colors
             for(uint i = 0; i < numStars; i++)
             {
-                int starSize = random.Next(1, 3);
+                int starSize = Random.Next(1, 3);
                 rt.Draw(new RectangleShape(new Vector2f(starSize, starSize))
                 {
-                    Position = new Vector2f(random.Next(0, (int)WindowWidth), random.Next(0, (int)WindowHeight)),
+                    Position = new Vector2f(Random.Next(0, (int)WindowWidth), Random.Next(0, (int)WindowHeight)),
 
                     // Give some variance in color, but keep mostly "white"
-                    FillColor = new Color( (byte)random.Next(200, 255), (byte)random.Next(200,255), (byte)random.Next(200,255))
+                    FillColor = new Color( (byte)Random.Next(200, 255), (byte)Random.Next(200,255), (byte)Random.Next(200,255))
                 });
             }
 
@@ -296,49 +327,89 @@ namespace SpaceshipGame.net
             //////////////////////////
             // Player ship 1
             //////////////////////////
-            if (Keyboard.IsKeyPressed(Keyboard.Key.A))
+            if (_playerShip1.IsAlive)
             {
-                _playerShip1.TurnLeft();
+                if (Keyboard.IsKeyPressed(Keyboard.Key.A))
+                {
+                    _playerShip1.TurnLeft();
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.S))
+                {
+                    _playerShip1.TurnRight();
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.F))
+                {
+                    _playerShip1.Fire();
+                }
+                _playerShip1.EnginesOn = Keyboard.IsKeyPressed(Keyboard.Key.D);
             }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.S))
-            {
-                _playerShip1.TurnRight();
-            }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.F))
-            {
-                _playerShip1.Fire();
-            }
-            _playerShip1.EnginesOn = Keyboard.IsKeyPressed(Keyboard.Key.D);
 
             //////////////////////////
             // Player ship 2
             //////////////////////////
-            if (Keyboard.IsKeyPressed(Keyboard.Key.Numpad4))
+            if (_playerShip2.IsAlive)
             {
-                _playerShip2.TurnLeft();
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Numpad4))
+                {
+                    _playerShip2.TurnLeft();
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Numpad5))
+                {
+                    _playerShip2.TurnRight();
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Add))
+                {
+                    _playerShip2.Fire();
+                }
+                _playerShip2.EnginesOn = Keyboard.IsKeyPressed(Keyboard.Key.Numpad6);
             }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.Numpad5))
-            {
-                _playerShip2.TurnRight();
-            }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.Add))
-            {
-                _playerShip2.Fire();
-            }
-            _playerShip2.EnginesOn = Keyboard.IsKeyPressed(Keyboard.Key.Numpad6);
-
         }
 
         /// <summary>
-        /// Inteface to add game entities.  We need to protect the internal list of entities because
-        ///   we don't want someone modifying the list while we are looping through it
+        /// Spawn any entities in the "waiting to spawn" queue
         /// </summary>
-        /// <param name="e">Entity to spawn</param>
-        static public void Spawn(GameEntity e)
+        static void SpawnEntities()
         {
-            // So add to a list for now, and we'll copy these to the main list later when we know
-            //  it will be safe.
-            _entitiesWaitingToSpawn.Add(e);
+            // First, ensure we have any entities waiting to spawn before we do any work
+            if (_entitiesWaitingToSpawn.Count > 0)
+            {
+                // Get all the entities from the "waiting to spawn" list whose time to
+                //  spawn is now or has passed. (Item2 in the tuple is the time to spawn) 
+                var readyToSpawnList = _entitiesWaitingToSpawn.FindAll(listItem => listItem.Item2 <= Now);
+
+                // Now, ensure we have any entities ready to spawn before doing
+                //   any work
+                if (readyToSpawnList.Count > 0)
+                {
+                    // Add the ready to spawn entities to the main list - IE "spawn" them!
+                    // (Item1 in the tuple is the entity itself)
+                    readyToSpawnList.ForEach(readyItem => _entities.Add(readyItem.Item1));
+
+                    // Mark them all as "alive" now, since they have been oficially spawned!
+                    // (Item1 in the tuple is the entity itself)
+                    readyToSpawnList.ForEach(readyItem => readyItem.Item1.IsAlive = true);
+
+                    // Finally, remove the items we just spawned from the waiting to spawn list
+                    // (We remove all items in the waiting to spawn list that are
+                    //   contained in the ready to spawn list)
+                    _entitiesWaitingToSpawn.RemoveAll(waitingItem => readyToSpawnList.Contains(waitingItem));
+                }
+            }
+        }
+
+        /// <summary>
+        /// This method allows us to queue up enties to be spawned into the game at a given time.
+        /// This is especially important because we need to be careful about when we update the
+        ///    main list of entities in the game.  For example, we don't want to change the
+        ///    contents of that list while we are iterating over the list (like during the main
+        ///    game update).
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="time"></param>
+        static public void Spawn(GameEntity e, Int32 time)
+        {
+            // So add to a "pending" list for now, and we'll copy these to the main list later
+            _entitiesWaitingToSpawn.Add(Tuple.Create(e, time));
         }
 
         /// <summary>
@@ -354,7 +425,7 @@ namespace SpaceshipGame.net
             while (Window.IsOpen)
             {
                 // Delta time in ms per frame
-                Int32 deltaTime = GameClock.ElapsedTime.AsMilliseconds() - _lastFrameTime;
+                Int32 deltaTime = Now - _lastFrameTime;
 
                 Window.DispatchEvents();
 
@@ -366,9 +437,8 @@ namespace SpaceshipGame.net
                 //  screen for each frame.
                 Window.Draw(_starfield);
 
-                // Add any entities waiting to "spawn" to the main list
-                _entities.AddRange(_entitiesWaitingToSpawn);
-                _entitiesWaitingToSpawn.Clear();
+                // Handle spawning any entities waiting
+                SpawnEntities();
 
                 // Loop through entities
                 _entities.ForEach( (entity) =>
@@ -401,7 +471,7 @@ namespace SpaceshipGame.net
                 Window.Display();
 
                 // Finally, update last frame time
-                _lastFrameTime -= GameClock.ElapsedTime.AsMilliseconds();
+                _lastFrameTime -= Now;
             }
         }
     }

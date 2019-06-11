@@ -110,7 +110,7 @@ namespace SpaceshipGame.net
             _curSprite = _sprites[0];
 
             // Initialize last bullet fired time
-            _lastBulletFiredTime = Game.GameClock.ElapsedTime.AsMilliseconds();
+            _lastBulletFiredTime = Game.Now;
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace SpaceshipGame.net
         public void Fire()
         {
             // Make sure enough time has passed so we can fire another bullet
-            if (Game.GameClock.ElapsedTime.AsMilliseconds() - _lastBulletFiredTime >= FireRate)
+            if (Game.Now - _lastBulletFiredTime >= FireRate)
             {
                 // Create the bullet based on our position, rotation, and velocity
                 Bullet b = new Bullet()
@@ -151,10 +151,10 @@ namespace SpaceshipGame.net
                 b.VelocityVector += this.VelocityVector;
 
                 // Tell the game to "spawn" this new bullet
-                Game.Spawn(b);
+                Game.Spawn(b, Game.Now);
 
                 // Update last bullet fired time stamp
-                _lastBulletFiredTime = Game.GameClock.ElapsedTime.AsMilliseconds();
+                _lastBulletFiredTime = Game.Now;
             }
         }
 
