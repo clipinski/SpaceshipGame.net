@@ -384,13 +384,16 @@ namespace SpaceshipGame.net
                 //   any work
                 if (readyToSpawnList.Count > 0)
                 {
-                    // Add the ready to spawn entities to the main list - IE "spawn" them!
-                    // (Item1 in the tuple is the entity itself)
-                    readyToSpawnList.ForEach(readyItem => _entities.Add(readyItem.Item1));
+                    // Loop through the list of items ready to spawn
+                    readyToSpawnList.ForEach(readyItem =>
+                    {
+                        // Add the entity itself (item1 in the tuple) to the main list
+                        //  of game entities - IE "spawn" it!
+                        _entities.Add(readyItem.Item1);
 
-                    // Mark them all as "alive" now, since they have been oficially spawned!
-                    // (Item1 in the tuple is the entity itself)
-                    readyToSpawnList.ForEach(readyItem => readyItem.Item1.IsAlive = true);
+                        // Mark that entity as "alive" cause we just spawned it
+                        readyItem.Item1.IsAlive = true;
+                    });
 
                     // Remove the items we just spawned from the waiting to spawn list
                     // (We remove all items in the waiting to spawn list that are
