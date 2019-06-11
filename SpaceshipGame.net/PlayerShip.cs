@@ -140,6 +140,7 @@ namespace SpaceshipGame.net
                 // Create the bullet based on our position, rotation, and velocity
                 Bullet b = new Bullet()
                 {
+                    ZOrder = 1,
                     Lifespan = 3000,
                     Position = this.Position,
                     Rotation = this.Rotation,

@@ -230,7 +230,8 @@ namespace SpaceshipGame.net
             _playerShip1 = new PlayerShip("gfx/ShipFrames1.bmp")
             {
                 // Initial position will be center height, 100px from the left
-                Position = new Vector2f(100, WindowHeight / 2)
+                Position = new Vector2f(100, WindowHeight / 2),
+                ZOrder = 10
             };
 
             // Create player ship 1
@@ -238,7 +239,8 @@ namespace SpaceshipGame.net
             {
                 // Initial position will be center height, 100px from the right
                 Position = new Vector2f(WindowWidth - 100, WindowHeight / 2),
-                Rotation = 180
+                Rotation = 180,
+                ZOrder = 10
             };
 
             // Add them to our entities list when we can
@@ -266,6 +268,7 @@ namespace SpaceshipGame.net
             // Spawn an explosion at that location
             Spawn(new Explosion()
             {
+                ZOrder = 20,
                 Position = ship.Position,
                 Rotation = ship.Rotation
             }, Now);
@@ -389,10 +392,16 @@ namespace SpaceshipGame.net
                     // (Item1 in the tuple is the entity itself)
                     readyToSpawnList.ForEach(readyItem => readyItem.Item1.IsAlive = true);
 
-                    // Finally, remove the items we just spawned from the waiting to spawn list
+                    // Remove the items we just spawned from the waiting to spawn list
                     // (We remove all items in the waiting to spawn list that are
                     //   contained in the ready to spawn list)
                     _entitiesWaitingToSpawn.RemoveAll(waitingItem => readyToSpawnList.Contains(waitingItem));
+
+                    // Finally, sort our main list by ZOrder
+                    // NOTE: We only want to do this when the list has actually changed, hence it
+                    //        is included in the "if" above, otherwise we would sort this list every
+                    //        fame which would be costly and server no purpose.
+                    _entities.Sort((a, b) => a.ZOrder.CompareTo(b.ZOrder));
                 }
             }
         }

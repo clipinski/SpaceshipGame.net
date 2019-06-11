@@ -41,6 +41,8 @@ namespace SpaceshipGame.net
         public bool IsAlive { get; set; } = false;  // Entities won't be set to alive until they are added to the game
         public Vector2f Position { get; set; } = new Vector2f(0f, 0f);
         public float Rotation { get; set; } = 0f;
+        public int ZOrder { get; set; } = 0;
+
 
         /// <summary>
         /// SFML uses degrees, so we create this property as readonly
