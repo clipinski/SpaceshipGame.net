@@ -35,9 +35,10 @@ namespace SpaceshipGame.net
     class Game
     {
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        #region Backing Stores
+        #region Internals
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        // Backing Stores
         static private IConfiguration _settings = null;
         static private RenderWindow _window = null;
         static private uint _windowWidth = 0;
@@ -56,6 +57,13 @@ namespace SpaceshipGame.net
 
         // List of entities queued up to spawn in and the time they should be spawned in
         static private List<Tuple<GameEntity, Int32>> _entitiesWaitingToSpawn = new List<Tuple<GameEntity, Int32>>();
+
+        // Items used for displaying each player's score
+        static private int _player1Score = 0;
+        static private int _player2Score = 0;
+        static private Font _scoreFont = null;
+        static private Text _player1ScoreTxt = null;
+        static private Text _player2ScoreTxt = null;
 
         #endregion
 
@@ -206,6 +214,9 @@ namespace SpaceshipGame.net
             }
         }
 
+        /// <summary>
+        /// Random number generator
+        /// </summary>
         static public Random Random
         {
             get
@@ -219,7 +230,6 @@ namespace SpaceshipGame.net
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Methods
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
         /// <summary>
         /// Initialize the game
@@ -251,8 +261,29 @@ namespace SpaceshipGame.net
             _playerShip1.OnKilled += OnShipKilled;
             _playerShip2.OnKilled += OnShipKilled;
 
+            // Add some scoring handlers
+            _playerShip1.OnKilled += (_, __) => _player2Score++;
+            _playerShip2.OnKilled += (_, __) => _player1Score++;
+
             // Finally, generate our background "starfield"
             GenerateStarfield(200);
+
+            // Setup objects to draw player score
+            _scoreFont = new Font("fonts/Xcelsion.ttf");
+            _player1ScoreTxt = new Text()
+            {
+                Font = _scoreFont,
+                FillColor = Color.White,
+                CharacterSize = 24,
+                Position = new Vector2f(100f, 80f)
+            };
+            _player2ScoreTxt = new Text()
+            {
+                Font = _scoreFont,
+                FillColor = Color.White,
+                CharacterSize = 24,
+                Position = new Vector2f(WindowWidth - 300f, 80f)
+            };
         }
 
         /// <summary>
@@ -478,6 +509,12 @@ namespace SpaceshipGame.net
 
                 // Remove all "dead" entities
                 _entities.RemoveAll((entity) => entity.IsAlive == false);
+
+                // Finally, draw the scores for each player
+                _player1ScoreTxt.DisplayedString = $"Player 1: {_player1Score}";
+                _player2ScoreTxt.DisplayedString = $"Player 2: {_player2Score}";
+                Window.Draw(_player1ScoreTxt);
+                Window.Draw(_player2ScoreTxt);
 
                 // Display everything we have draw so far
                 Window.Display();
