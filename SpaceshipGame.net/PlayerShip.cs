@@ -96,14 +96,15 @@ namespace SpaceshipGame.net
             for (int i = 0; i < 4; i++)
             {
                 // In this case, we know that each frame is 64x64.  
-                _sprites[i] = new Sprite(new Texture(img), new IntRect(0 + (64 * i), 0, 63, 63));
+                _sprites[i] = new Sprite(new Texture(img), new IntRect(0 + (64 * i), 0, 63, 63))
+                {
+                    // We are going to scale each frame times 2
+                    Scale = new Vector2f(2.0f, 2.0f),
 
-                // We are going to scale each frame times 2
-                _sprites[i].Scale = new Vector2f(2.0f, 2.0f);
-
-                // Set the origin point of the image for rotation.  Since we know the coords will be
-                //  0 to 63 (64x64) then we know the center is at 31.5 x 31.5
-                _sprites[i].Origin = new Vector2f(31.5f, 31.5f);
+                    // Set the origin point of the image for rotation.  Since we know the coords will be
+                    //  0 to 63 (64x64) then we know the center is at 31.5 x 31.5
+                    Origin = new Vector2f(31.5f, 31.5f)
+                };
             }
 
             // Set the default value for the current sprite to use when we draw ourselves
